@@ -1,7 +1,8 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import { useEffect } from "react";
-import { LDProvider, useLDClient } from "launchdarkly-react-client-sdk";
+import flagsmith from "flagsmith";
+import { FlagsmithProvider } from "flagsmith/react";
+import { LDProvider } from "launchdarkly-react-client-sdk";
 import NoSSRWrapper from "@/components/no-ssr";
 import { TripsProvider } from "@/utils/contexts/TripContext";
 import { LoginProvider } from "@/utils/contexts/login";
@@ -10,19 +11,13 @@ import Head from "next/head";
 import { PersonaProvider } from "@/components/personacontext";
 import { QuickCommandDialog } from "@/components/quickcommand";
 
-const context = {
+const ldContext = {
   kind: "user",
   key: "user-key-123abcde",
   email: "biz@face.dev",
 };
 
 function AppWrapper({ Component, pageProps }: AppProps) {
-  const ldClient = useLDClient();
-
-  useEffect(() => {
-    ldClient?.track(process.env.NEXT_PUBLIC_LD_EVENT_KEY || "");
-  }, [ldClient]);
-
   return (
     <NoSSRWrapper>
       <PersonaProvider>
@@ -48,8 +43,15 @@ function AppWrapper({ Component, pageProps }: AppProps) {
 
 export default function MyApp(props: AppProps) {
   return (
-    <LDProvider clientSideID={process.env.NEXT_PUBLIC_LD_CLIENT_KEY || ""} context={context}>
-      <AppWrapper {...props} />
-    </LDProvider>
+    <FlagsmithProvider
+      flagsmith={flagsmith}
+      options={{
+        environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_API_KEY || process.env.NEXT_PUBLIC_LD_CLIENT_KEY || "",
+      }}
+    >
+      <LDProvider clientSideID={process.env.NEXT_PUBLIC_LD_CLIENT_KEY || ""} context={ldContext}>
+        <AppWrapper {...props} />
+      </LDProvider>
+    </FlagsmithProvider>
   );
 }

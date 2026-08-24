@@ -1,7 +1,9 @@
 
 import { useEffect, useState, useContext } from "react";
 import { motion } from "framer-motion";
-import { useFlags, useLDClient } from "launchdarkly-react-client-sdk";
+import flagsmith from "flagsmith";
+import { useFlags as useFlagsmith } from "flagsmith/react";
+import { useFlags as useLDFlags, useLDClient } from "launchdarkly-react-client-sdk";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import NavBar from "@/components/ui/navbar";
@@ -28,9 +30,11 @@ export default function Marketplace() {
 {/* Step 1 code block */}
 
   const LDClient = useLDClient();
-  const { storeAttentionCallout, featNewMenu} = useFlags();
-
-  console.log("[LD] featNewMenu:", featNewMenu);
+  const { storeAttentionCallout } = useLDFlags();
+  const { lab2_feature } = useFlagsmith(["lab2_feature"], []);
+  const showNewMenu = lab2_feature?.enabled ?? false;
+  console.log("[Flagsmith] lab2_feature:", lab2_feature, "showNewMenu:", showNewMenu);
+  console.log("[LD] storeAttentionCallout:", storeAttentionCallout);
 
   {/* Step 1 code block */}
 
@@ -45,13 +49,13 @@ export default function Marketplace() {
 
   const addToCart = (item: any) => {
 
-    LDClient?.track("item-added", LDClient.getContext(), 1);
+    // Flagsmith tracking - lab2_feature
 
     setCart([...cart, item]);
   };
 
   const storeAccessed = () => {
-    LDClient?.track("item-accessed", LDClient.getContext(), 1);
+    // Flagsmith tracking - item-accessed
 
   };
 
@@ -313,7 +317,7 @@ export default function Marketplace() {
                     />
                   </div>
                   
-                  {featNewMenu && (
+                  {showNewMenu && (
                     <div className="mt-4 sm:mt-6 gap-x-2 gap-y-4 sm:gap-y-0 grid grid-cols-3 sm:flex sm:grid-cols-0  ">
                       <Badge className="text-lg border-2 bg-transparent border-gray-500 text-ldlightgray">
                         Accessories
